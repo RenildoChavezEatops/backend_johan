@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 
 from .serializers import RegisterSerializer, EmailTokenObtainPairSerializer
 from .models import User
@@ -21,7 +21,7 @@ class RegisterView(CreateAPIView):
         token = default_token_generator.make_token(user)
         uid = user.pk
 
-        verification_link = f"http://localhost:8000/api/auth/verify-email/?uid={uid}&token={token}"
+        verification_link = f"http://localhost:8001/api/users/verify-email/?uid={uid}&token={token}"
 
         send_mail(
             "Verifica tu correo",
@@ -51,3 +51,28 @@ class VerifyEmailView(APIView):
 
 class EmailLoginView(TokenObtainPairView):
     serializer_class = EmailTokenObtainPairSerializer
+
+
+class CookieTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        refresh = request.COOKIES.get("refresh_token")
+
+        if refresh is None:
+            return Response({"detail": "No refresh token"}, status=401)
+
+        request.data["refresh"] = refresh
+        response = super().post(request, *args, **kwargs)
+
+        access = response.data.get("access")
+        response.data = {"detail": "token refreshed"}
+
+        response.set_cookie(
+            "access_token",
+            access,
+            httponly=True,
+            secure=True,
+            samesite="Lax",
+            max_age=60 * 30,
+        )
+
+        return response

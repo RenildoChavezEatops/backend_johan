@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  django:
+    build: .
+    container_name: django_app
+    restart: always
+    depends_on:
+      - redis
+      - db
+    ports:
+      - "8001:8001"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DATABASE_URL=postgres://user:pass@db:5432/dbname
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - .:/app
+    networks:
+      - appnet
+
+  redis:
+    image: redis:7
+    restart: always
+    container_name: redis_ws
+    ports:
+      - "6380:6379"
+    networks:
+      - appnet
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: qwerliv19
+      POSTGRES_DB: technical_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - appnet
+
+volumes:
+  postgres_data:
+
+networks:
+  appnet:
