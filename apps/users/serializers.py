@@ -23,31 +23,3 @@ class RegisterSerializer(serializers.ModelSerializer):
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email'
 
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        data = response.data
-
-        access = data.get("access")
-        refresh = data.get("refresh")
-
-        response.data = {"detail": "login successful"}
-
-        response.set_cookie(
-            key="access_token",
-            value=access,
-            httponly=True,
-            secure=True,
-            samesite="Lax",
-            max_age=60,  # 1 min
-        )
-
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh,
-            httponly=True,
-            secure=True,
-            samesite="Lax",
-            max_age=60 * 60 * 24 * 7,  # 7 días
-        )
-
-        return response
