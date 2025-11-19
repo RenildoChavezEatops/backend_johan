@@ -9,3 +9,4 @@ class ChatMessage(models.Model):
     receiver = models.CharField(max_length=50)
     message = models.TextField()
     timestamp = models.DateTimeField()
+    id_user = models.IntegerField(null=True) # Para hacer migraciones colocamos null=True
